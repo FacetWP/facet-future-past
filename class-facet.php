@@ -4,10 +4,16 @@ class FacetWP_Facet_Future_Past extends FacetWP_Facet
 {
 
     /**
-     * Give the facet a label
+     * Give the facet a label and setting fields
      */
     function __construct() {
         $this->label = __( 'Future Past', 'fwp' );
+        /**
+         * label_any is a builtin field
+         * order_first is a custom field, defined in 
+         * register_fields method
+         */
+        $this->fields = [ 'label_any', 'order_first' ];
     }
 
 
@@ -39,15 +45,21 @@ class FacetWP_Facet_Future_Past extends FacetWP_Facet
         $output = [
             [
                 'facet_value' => 'future',
-                'facet_display_value' => 'Future',
+                'facet_display_value' => __( 'Future', 'fwp' ),
                 'counter' => 0
             ],
             [
                 'facet_value' => 'past',
-                'facet_display_value' => 'Past',
+                'facet_display_value' => __( 'Past', 'fwp' ),
                 'counter' => 0
             ]
         ];
+
+        $order_first = isset( $params['facet']['order_first'] ) && '' != $params['facet']['order_first'] ? $params['facet']['order_first'] : 'future'; // default = future
+
+        if ( 'past' == $order_first ) {
+            $output = array_reverse( $output, true );
+        }
 
         foreach ( $results as $row ) {
             $row_num = ( 'future' == $row['type'] ) ? 0 : 1;
@@ -99,11 +111,22 @@ class FacetWP_Facet_Future_Past extends FacetWP_Facet
         FWP()->display->assets['future-past-front.js'] = plugins_url( '', __FILE__ ) . '/assets/js/front.js';
     }
 
-
     /**
-     * Register custom UI settings (here we're inheriting the existing "label_any" setting)
-     */
-    function settings_html() {
-        $this->render_setting( 'label_any' );
+     * register custom setting fields - order_first
+     * */
+    function register_fields() {
+        return [
+            'order_first' => [
+                'type' => 'select',
+                'label' => __( 'Order of Options', 'facetwp-time-since' ),
+                'choices' => [
+                    'future' => __( 'Future then Past', 'fwp' ),
+                    'past' => __( 'Past then Future', 'fwp' )
+                ],
+                'default' => 'future',
+                'notes' => ''
+            ]
+        ];
     }
+
 }
